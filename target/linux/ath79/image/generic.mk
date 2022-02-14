@@ -639,6 +639,19 @@ define Device/avm_fritz4020
 endef
 TARGET_DEVICES += avm_fritz4020
 
+define Device/avm_fritz3390-wasp
+  SOC := ar9342
+  DEVICE_VENDOR := AVM
+  DEVICE_MODEL := FRITZ!Box 3390 WASP (Wireless Assist)
+  KERNEL := kernel-bin | append-dtb | relocate-kernel | lzma-no-dict | \
+      avm-wasp-loader | pad-to 4096 | pad-extra 208 | avm-wasp-checksum 3390
+  LOADER_TYPE := bin
+  KERNEL_INITRAMFS := $$(KERNEL)
+  DEVICE_PACKAGES := -uboot-envtools -swconfig -ppp -kmod-ppp -dnsmasq
+  IMAGE_SIZE := 11000k
+endef
+TARGET_DEVICES += avm_fritz3390-wasp
+
 define Device/avm_fritz450e
   $(Device/avm)
   SOC := qca9556
