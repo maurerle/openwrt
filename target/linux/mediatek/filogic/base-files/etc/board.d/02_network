@@ -164,6 +164,7 @@ mediatek_setup_macs()
 	acer,vero-w6m)
 		wan_mac=$(mmc_get_mac_ascii u-boot-env WANMAC)
 		lan_mac=$(mmc_get_mac_ascii u-boot-env LANMAC)
+		label_mac=$(mmc_get_mac_ascii u-boot-env WANMAC)
 		;;
 	bananapi,bpi-r3|\
 	bananapi,bpi-r3-mini|\
