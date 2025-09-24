@@ -184,6 +184,7 @@ mediatek_setup_macs()
 	acer,vero-w6m)
 		wan_mac=$(mmc_get_mac_ascii u-boot-env WANMAC)
 		lan_mac=$(mmc_get_mac_ascii u-boot-env LANMAC)
+		label_mac=$(mmc_get_mac_ascii u-boot-env WANMAC)
 		;;
 	acer,predator-w6x)
 		wan_mac=$(mtd_get_mac_ascii u-boot-env ethaddr)
