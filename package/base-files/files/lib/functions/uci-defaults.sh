@@ -757,6 +757,7 @@ ucidef_set_poe() {
 }
 
 ucidef_add_wlan() {
+	return 0
 	local path="$1"; shift
 
 	ucidef_wlan_idx=${ucidef_wlan_idx:-0}
