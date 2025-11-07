@@ -226,6 +226,7 @@ ipq40xx_setup_macs()
 	linksys,whw03)
 		wan_mac=$(mmc_get_mac_ascii devinfo hw_mac_addr)
 		lan_mac="$wan_mac"
+		label_mac="$wan_mac"
 		;;
 	mikrotik,cap-ac|\
 	mikrotik,hap-ac2|\
