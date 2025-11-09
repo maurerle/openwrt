@@ -1,4 +1,4 @@
-From b5ade0e0e1c1622a85fbfd2c93b41caff479f305 Mon Sep 17 00:00:00 2001
+From 597a3c9c224d215204782a2d60a9d44586284d7d Mon Sep 17 00:00:00 2001
 From: Florian Maurer <f.maurer@outlook.de>
 Date: Fri, 3 Oct 2025 12:56:13 +0200
 Subject: [PATCH] ath11k: add ath11k_mac_op_flush_sta to properly flush pending
@@ -26,12 +26,12 @@ Co-developed-by: Benjamin Berg <benjamin@sipsolutions.net>
 Signed-off-by: Benjamin Berg <benjamin@sipsolutions.net>
 Signed-off-by: Florian Maurer <f.maurer@outlook.de>
 ---
- drivers/net/wireless/ath/ath11k/mac.c | 18 ++++++++++++++++++
- 1 file changed, 18 insertions(+)
+ drivers/net/wireless/ath/ath11k/mac.c | 21 +++++++++++++++++++++
+ 1 file changed, 21 insertions(+)
 
 --- a/drivers/net/wireless/ath/ath11k/mac.c
 +++ b/drivers/net/wireless/ath/ath11k/mac.c
-@@ -8248,6 +8248,23 @@ static void ath11k_mac_op_flush(struct i
+@@ -8248,6 +8248,26 @@ static void ath11k_mac_op_flush(struct i
  	ath11k_mac_flush_tx_complete(ar);
  }
  
@@ -47,6 +47,9 @@ Signed-off-by: Florian Maurer <f.maurer@outlook.de>
 +	};
 +	int ret;
 +
++	if (vif->type == NL80211_IFTYPE_STATION)
++		params.peer_tid_bitmap |= 0x1e000000;
++
 +	ret = ath11k_wmi_send_peer_flush_tids_cmd(ar, sta->addr, &params);
 +	if (ret)
 +		ath11k_warn(ar->ab, "failed to flush sta %pM: %d\n", sta->addr, ret);
@@ -55,7 +58,7 @@ Signed-off-by: Florian Maurer <f.maurer@outlook.de>
  static bool
  ath11k_mac_has_single_legacy_rate(struct ath11k *ar,
  				  enum nl80211_band band,
-@@ -9823,6 +9840,7 @@ static const struct ieee80211_ops ath11k
+@@ -9823,6 +9843,7 @@ static const struct ieee80211_ops ath11k
  	.set_bitrate_mask		= ath11k_mac_op_set_bitrate_mask,
  	.get_survey			= ath11k_mac_op_get_survey,
  	.flush				= ath11k_mac_op_flush,
