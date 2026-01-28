@@ -14,6 +14,7 @@ ipq806x_setup_interfaces()
 	arris,tr4400-v2)
 		ucidef_set_interfaces_lan_wan "lan1 lan2 lan3 lan4" "eth2"
 		;;
+	aruba,ap-325|\
 	askey,rt4230w-rev6 |\
 	asrock,g10 |\
 	nec,wg2600hp |\
