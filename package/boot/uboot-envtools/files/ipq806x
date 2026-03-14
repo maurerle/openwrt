@@ -35,6 +35,11 @@ arris,tr4400-v2|\
 askey,rt4230w-rev6)
 	ubootenv_add_uci_config "/dev/mtd9" "0x0" "0x40000" "0x20000"
 	;;
+aruba,ap-325|\
+qcom,ipq8064-ap148|\
+qcom,ipq8064-db149)
+	ubootenv_add_uci_config $(ubootenv_mtdinfo)
+	;;
 edgecore,ecw5410)
 	ubootenv_add_uci_config "/dev/mtd11" "0x0" "0x10000" "0x10000"
 	;;
@@ -51,10 +56,6 @@ netgear,r7800)
 	;;
 nokia,ac400i)
 	ubootenv_add_uci_config "/dev/mtd20" "0x0" "0x040000" "0x20000"
-	;;
-qcom,ipq8064-ap148|\
-qcom,ipq8064-db149)
-	ubootenv_add_uci_config $(ubootenv_mtdinfo)
 	;;
 ubnt,unifi-ac-hd|\
 zyxel,nbg6817)

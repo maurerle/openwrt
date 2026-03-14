@@ -26,6 +26,17 @@ platform_do_upgrade() {
 	qcom,ipq8064-ap161)
 		nand_do_upgrade "$1"
 		;;
+	aruba,ap-325)
+		# APBoot enforces fixed UBI volume names (aos0/aos1/ubifs); the
+		# MTD partition labels match, so skip MTD-based kernel update.
+		CI_KERNPART="aos0"
+		CI_ROOTPART="aos1"
+		CI_KERN_UBIPART="aos0"
+		CI_ROOT_UBIPART="aos1"
+		CI_DATA_UBIPART="ubifs"
+		CI_SKIP_KERNEL_MTD=1
+		nand_do_upgrade "$1"
+		;;
 	asrock,g10)
 		asrock_upgrade_prepare
 		nand_do_upgrade "$1"
