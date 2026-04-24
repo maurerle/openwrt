@@ -161,6 +161,11 @@ zyxel,lte7490-m904|\
 zyxel,nr7101)
 	ubootenv_add_mtd "Config" "0x0" "0x1000" "0x80000"
 	;;
+zyxel,nwa50ax|\
+zyxel,nwa55axe|\
+zyxel,nwa90ax)
+	ubootenv_add_uci_config "/dev/mtd1" "0x0" "0x20000" "0x20000"
+	;;
 esac
 
 config_load ubootenv
