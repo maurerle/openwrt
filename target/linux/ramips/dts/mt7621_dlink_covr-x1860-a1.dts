@@ -95,7 +95,6 @@
 		partition@80000 {
 			label = "config";
 			reg = <0x80000 0x80000>;
-			read-only;
 		};
 
 		partition@100000 {
