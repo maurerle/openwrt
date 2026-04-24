@@ -162,6 +162,11 @@ netgear,wax214v2)
 	ubootenv_add_uci_config "/dev/mtd1" "0x0" "0x20000" "0x20000"
 	ubootenv_add_uci_sys_config "/dev/mtd1" "0x20000" "0x8000" "0x20000"
 	;;
+zyxel,nwa50ax|\
+zyxel,nwa55axe|\
+zyxel,nwa90ax)
+	ubootenv_add_uci_config "/dev/mtd1" "0x0" "0x20000" "0x20000"
+	;;
 esac
 
 config_load ubootenv
