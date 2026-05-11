@@ -1,0 +1,24 @@
+Make BUILD_DATE honor SOURCE_DATE_EPOCH for reproducible builds.
+
+Without this, every build of qca-ssdk embeds a fresh `date`-derived timestamp
+into the .ko (via -DBUILD_DATE=... in make/linux_opt.mk and aos_mem_copy() in
+src/hsl/hsl_dev.c), so two builds of identical sources produce different
+qca-ssdk.ko bytes and therefore different OpenWrt firmware images.
+
+When SOURCE_DATE_EPOCH is set (OpenWrt exports it from include/toplevel.mk),
+derive BUILD_DATE from it via perl + POSIX::strftime — same idiom as
+OpenWrt's include/kernel.mk — preserving the %F-%T format the .ko expects.
+Falls back to the original `date` call for standalone qca-ssdk builds.
+
+--- a/make/config.mk
++++ b/make/config.mk
+@@ -136,4 +136,8 @@ BIN_DIR=$(PRJ_PATH)/build/bin
+ VER=3.1.0
+ BUILD_NUMBER=$(shell cat $(PRJ_PATH)/make/.build_number)
+ VERSION=$(VER).$(BUILD_NUMBER)
+-BUILD_DATE=$(shell date -u  +%F-%T)
++ifneq ($(SOURCE_DATE_EPOCH),)
++  BUILD_DATE:=$(shell perl -MPOSIX -e 'print strftime("%F-%T", gmtime($(SOURCE_DATE_EPOCH)))')
++else
++  BUILD_DATE:=$(shell date -u +%F-%T)
++endif
