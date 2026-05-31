@@ -1,0 +1,46 @@
+From: Florian Maurer <fmaurer@disroot.org>
+Subject: [PATCH] arm64: smp: call rcutree_report_cpu_dead() in local_cpu_stop()
+
+local_cpu_stop() (used by both panic_smp_self_stop() and the IPI_CPU_STOP
+handler in do_handle_IPI()) clears the dying CPU from cpu_online_mask
+and then parks the CPU in cpu_park_loop() without telling RCU. This is
+the arm64 analog of the ARM ipi_cpu_stop() gap fixed in the previous
+patch: RCU's qsmaskinitnext and ffmask bits for the stopped CPU remain
+set while cpu_is_offline() returns true, which can lead to a long RCU
+stall and a WARN in irq_work_queue_on() when force_qs_rnp() targets the
+now-offline CPU.
+
+arm64 already establishes this pattern in cpu_die_early(), which calls
+rcutree_report_cpu_dead() after set_cpu_present(cpu, 0); apply the same
+treatment to local_cpu_stop(). Place the call after local_daif_mask() so
+IRQs are guaranteed masked when rcutree_report_cpu_dead()'s
+lockdep_assert_irqs_disabled() runs (both panic_smp_self_stop() and the
+IPI path enter with IRQs disabled, but local_daif_mask() makes the
+invariant explicit).
+
+NOTE: this arm64 sibling patch is by analogy with the ARM fix and has
+not been runtime-tested on arm64 hardware. The bug is structurally
+identical (verified against arch/arm64/kernel/smp.c in mainline), but a
+real reproducer on arm64 would be useful before merge.
+
+The crash-stop path ipi_cpu_crash_stop() has a similar gap when
+CONFIG_HOTPLUG_CPU=n (when set, __cpu_try_die() handles RCU teardown
+via the normal cpuhp machinery); that case is left for a separate
+patch.
+
+Signed-off-by: Florian Maurer <fmaurer@disroot.org>
+---
+ arch/arm64/kernel/smp.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+--- a/arch/arm64/kernel/smp.c
++++ b/arch/arm64/kernel/smp.c
+@@ -866,6 +866,8 @@ static void __noreturn local_cpu_stop(un
+ 	set_cpu_online(cpu, false);
+
+ 	local_daif_mask();
++	rcutree_report_cpu_dead();
++
+ 	sdei_mask_local_cpu();
+ 	cpu_park_loop();
+ }
