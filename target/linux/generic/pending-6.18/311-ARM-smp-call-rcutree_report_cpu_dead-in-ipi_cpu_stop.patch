@@ -1,0 +1,48 @@
+From: Florian Maurer <fmaurer@disroot.org>
+Subject: [PATCH] ARM: smp: call rcutree_report_cpu_dead() in ipi_cpu_stop()
+
+When the system is halted or powered off, machine_halt() and
+machine_power_off() use smp_send_stop() to take secondary CPUs offline.
+The IPI handler ipi_cpu_stop() clears the dying CPU from cpu_online_mask
+via set_cpu_online(cpu, false) and then spins forever in
+"cpu_relax(); wfe();" from interrupt context.
+
+This bypasses the normal CPU-hotplug teardown path:
+rcutree_report_cpu_dead() and rcutree_offline_cpu() are never called,
+so RCU's qsmaskinitnext and ffmask bits for the stopped CPU remain set.
+Meanwhile cpu_is_offline() returns true. The two views disagree.
+
+If the RCU grace-period kthread had armed a schedule_timeout() timer on
+the stopped CPU just before the IPI arrived, the timer can never be
+serviced (the CPU is wedged in IRQ context with IRQs masked), so the
+kthread starves until CONFIG_RCU_CPU_STALL_TIMEOUT fires. The stall
+detector then kicks the kthread alive on another CPU, where
+force_qs_rnp() -> rcu_implicit_dynticks_qs() reaches an
+irq_work_queue_on() targeting the offline CPU and trips
+WARN_ON_ONCE(cpu_is_offline(cpu)) in kernel/irq_work.c.
+
+Reproduced on Aruba AP-325 (Qualcomm IPQ8068, dual-core Krait) by
+issuing "poweroff": 21-second stall followed by the WARN.
+
+Call rcutree_report_cpu_dead() before the wait loop so that RCU's
+per-CPU bitmasks match the now-offline state. The function is called on
+the stopping CPU itself (it uses this_cpu_ptr internally), and
+ipi_cpu_stop() runs from hard-IRQ context with IRQs masked, satisfying
+the lockdep_assert_irqs_disabled() inside rcutree_report_cpu_dead().
+
+Signed-off-by: Florian Maurer <fmaurer@disroot.org>
+---
+ arch/arm/kernel/smp.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+--- a/arch/arm/kernel/smp.c
++++ b/arch/arm/kernel/smp.c
+@@ -607,6 +607,8 @@ static void ipi_cpu_stop(unsigned int cp
+
+ 	set_cpu_online(cpu, false);
+
++	rcutree_report_cpu_dead();
++
+ 	while (1) {
+ 		cpu_relax();
+ 		wfe();
